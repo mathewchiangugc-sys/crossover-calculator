@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Crossover Point — Calculator</title>
+<meta name="description" content="Find the year your investments can pay for your life, and see how much sooner you get there by spending less, earning more or saving harder up front.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800&family=Work+Sans:ital,wght@0,400;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;700&family=Nothing+You+Could+Do&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream:#F5EFE1; --panel:#FBF7EC; --panel2:#F7F1E2; --line:#E0D5BE;
+    --teal:#23625D; --teal-d:#1B4F4B; --orange:#C95B2B; --orange-w:#FBEADF;
+    --mustard:#E8BC63; --brass:#B08A35; --brassdark:#9C7526;
+    --ink:#2E2620; --muted:#7A6E5F;
+    --disp:"Outfit","Futura","Century Gothic","Avenir Next",system-ui,sans-serif;
+    --body:"Work Sans","Segoe UI",system-ui,-apple-system,sans-serif;
+    --mono:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,"Roboto Mono",monospace;
+  }
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  html{ -webkit-text-size-adjust:100%; }
+  /* the footer bleeds to 100vw; without this a scrollbar can nudge the page sideways */
+  html,body{ overflow-x:hidden; }
+  body{
+    background:
+      radial-gradient(1100px 520px at 88% -8%, #FBF6E9 0%, rgba(251,246,233,0) 62%),
+      var(--cream);
+    color:var(--ink); font-family:var(--body); line-height:1.5;
+    -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+    font-variant-numeric:tabular-nums;
+  }
+  .wrap{ max-width:960px; margin:0 auto; padding:clamp(22px,4vw,44px) clamp(16px,4vw,38px) 0; }
+
+  /* ── header ───────────────────────────────────────────── */
+  header{ display:flex; justify-content:space-between; align-items:flex-start; gap:24px; flex-wrap:wrap; }
+  .eyebrow{ font-family:var(--mono); font-size:11px; letter-spacing:0.16em; color:var(--brass);
+    text-transform:uppercase; margin-bottom:12px; }
+  h1{ font-family:var(--disp); font-weight:800; font-size:clamp(34px,7vw,54px); letter-spacing:0.035em;
+    line-height:0.98; color:var(--teal); text-wrap:balance; }
+  .tagline{ margin-top:12px; font-size:15px; line-height:1.5; max-width:38ch; color:var(--ink); text-wrap:pretty; }
+  .tagline b{ color:var(--orange); }
+  .dialwrap{ text-align:center; flex:0 0 auto; padding-top:4px; }
+  .dialwrap svg{ display:block; margin:0 auto; }
+  .diallabel{ font-family:var(--mono); font-size:9px; letter-spacing:0.22em; color:var(--muted);
+    margin-top:5px; text-transform:uppercase; }
+  #needle{ transition:transform .45s cubic-bezier(.3,1.3,.5,1); transform-origin:59px 64px; }
+
+  .rule{ height:2px; background:var(--ink); margin:20px 0 0; }
+  .howto{ margin:12px 0 4px; font-family:var(--mono); font-size:11.5px; letter-spacing:0.03em;
+    color:var(--muted); line-height:1.6; }
+  .howto b{ color:var(--teal); font-weight:700; }
+
+  /* ── the idea / why it matters ── */
+  .notice{ margin-top:14px; border:1.4px dashed var(--orange); border-radius:6px; background:var(--panel);
+    padding:9px 15px; display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; }
+  .notice .k{ font-family:var(--mono); font-weight:700; font-size:10px; letter-spacing:0.18em;
+    color:var(--orange); text-transform:uppercase; flex:0 0 auto; }
+  .notice .v{ font-size:13.5px; line-height:1.5; color:var(--ink); flex:1 1 380px; }
+  .notice .v b{ color:var(--teal); font-weight:700; }
+  .why{ margin-top:10px; border:1px solid var(--line); border-left:3px solid var(--teal); border-radius:6px;
+    background:var(--panel); padding:10px 15px; display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; }
+  .why .k{ font-family:var(--mono); font-weight:700; font-size:10px; letter-spacing:0.18em;
+    color:var(--teal); text-transform:uppercase; flex:0 0 auto; }
+  .why .v{ font-size:13.5px; line-height:1.55; color:var(--ink); flex:1 1 380px; text-wrap:pretty; }
+  .why .v b{ color:var(--teal); font-weight:700; }
+
+  /* ── section tags ─────────────────────────────────────── */
+  .sectag{ font-family:var(--mono); font-size:9.5px; letter-spacing:0.24em; color:var(--brass);
+    text-transform:uppercase; margin:22px 0 9px; display:flex; align-items:center; gap:12px; }
+  .sectag::after{ content:''; flex:1; height:1px; background:var(--line); }
+
+  /* ── the three phases ─────────────────────────────────── */
+  .phases{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+  .phase{ position:relative; background:var(--panel); border:1px solid var(--line); border-radius:8px;
+    padding:18px 15px 14px; margin-top:12px; }
+  .phase .disc{ position:absolute; top:-13px; left:14px; width:26px; height:26px; border-radius:50%;
+    background:var(--ink); color:var(--cream); font-family:var(--mono); font-weight:700; font-size:12px;
+    display:flex; align-items:center; justify-content:center; }
+  .phase.end .disc{ background:var(--orange); }
+  .phase .pt{ font-family:var(--disp); font-weight:700; font-size:13px; letter-spacing:0.1em;
+    text-transform:uppercase; color:var(--teal); }
+  .phase.end .pt{ color:var(--orange); }
+  .phase .pd{ font-size:12.5px; line-height:1.5; color:var(--ink); margin-top:5px; }
+  .phase .pm{ font-family:var(--mono); font-size:9.5px; letter-spacing:0.12em; color:var(--muted);
+    text-transform:uppercase; margin-top:8px; }
+
+  /* ── console ──────────────────────────────────────────── */
+  .console{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .ctrl{ background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:13px 15px 15px; }
+  .ctrl .lab{ display:flex; justify-content:space-between; align-items:baseline; gap:10px; }
+  .ctrl .lab .k{ font-family:var(--disp); font-weight:700; font-size:12.5px; letter-spacing:0.08em;
+    text-transform:uppercase; color:var(--ink); }
+  .ctrl .lab .h{ font-family:var(--mono); font-size:9px; letter-spacing:0.1em; color:var(--muted); text-transform:uppercase; }
+  .valrow{ display:flex; align-items:center; gap:6px; margin:7px 0 11px; }
+  .valrow .cur{ font-family:var(--mono); font-weight:700; font-size:15px; color:var(--brass); }
+  .valrow input[type=number]{
+    font-family:var(--mono); font-weight:700; font-size:22px; color:var(--teal); background:transparent;
+    border:none; border-bottom:2px dotted var(--brass); width:100%; padding:0 0 2px; min-width:0; }
+  .valrow input[type=number]:focus{ outline:none; border-bottom-color:var(--orange); color:var(--orange); }
+  input::-webkit-outer-spin-button, input::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
+  input[type=number]{ -moz-appearance:textfield; appearance:textfield; }
+  .valrow .unit{ font-family:var(--mono); font-size:11px; color:var(--muted); white-space:nowrap; }
+  .ctrl .hint{ font-size:11.5px; color:var(--muted); margin-top:8px; line-height:1.4; }
+  .ctrl .hint b{ font-family:var(--mono); color:var(--teal); font-weight:700; }
+  .ctrl .hint.warn b{ color:var(--orange); }
+
+  input[type=range]{ -webkit-appearance:none; appearance:none; width:100%; height:4px; border-radius:3px;
+    background:linear-gradient(var(--brass),var(--brass)) no-repeat, #E7DCC6; background-size:var(--fill,50%) 100%; cursor:pointer; }
+  input[type=range]:focus{ outline:none; }
+  input[type=range]:focus-visible{ outline:2px solid var(--teal); outline-offset:6px; border-radius:6px; }
+  input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none; width:20px; height:20px; border-radius:50%;
+    background:var(--orange); border:3px solid var(--cream); box-shadow:0 1px 4px rgba(46,38,32,.35); margin-top:-8px; }
+  input[type=range]::-moz-range-thumb{ width:20px; height:20px; border-radius:50%; background:var(--orange);
+    border:3px solid var(--cream); box-shadow:0 1px 4px rgba(46,38,32,.35); }
+
+  .chips{ display:flex; flex-wrap:wrap; gap:6px; margin-top:11px; }
+  .chip{ font-family:var(--mono); font-size:10.5px; letter-spacing:0.02em; color:var(--muted);
+    background:var(--cream); border:1px solid var(--line); border-radius:999px; padding:5px 10px; cursor:pointer;
+    transition:background .12s,border-color .12s,color .12s; }
+  .chip:hover{ border-color:var(--brass); color:var(--ink); }
+  .chip.on{ background:var(--teal); border-color:var(--teal); color:var(--cream); }
+  .chip:disabled{ opacity:.45; cursor:not-allowed; }
+  .chip:focus-visible{ outline:2px solid var(--teal); outline-offset:2px; }
+
+  /* ── what-ifs ─────────────────────────────────────────── */
+  .bench{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .lane{ background:var(--panel); border:1px solid var(--line); border-left:3px solid var(--orange);
+    border-radius:8px; padding:13px 15px 15px; }
+  .lane .tag{ font-family:var(--disp); font-weight:700; font-size:13px; letter-spacing:0.1em;
+    text-transform:uppercase; color:var(--orange); }
+  .lane .sub{ font-size:11.5px; color:var(--muted); margin-top:2px; line-height:1.4; }
+  .minirow{ display:flex; align-items:baseline; gap:8px; margin-top:10px; }
+  .minirow .ml{ font-family:var(--mono); font-size:10px; letter-spacing:0.12em; color:var(--muted);
+    text-transform:uppercase; flex:0 0 7.5em; }
+  .minirow .cur{ font-family:var(--mono); font-weight:700; font-size:18px; color:var(--brass); }
+  .minirow input[type=number]{ font-family:var(--mono); font-weight:700; font-size:24px; color:var(--orange);
+    background:transparent; border:none; border-bottom:2px dotted var(--brass); width:100%; padding:0 0 2px; min-width:0; }
+  .minirow input[type=number]:focus{ outline:none; border-bottom-color:var(--orange); }
+  .minirow .unit{ font-family:var(--mono); font-size:11px; color:var(--muted); white-space:nowrap; }
+  .lane .chips .chip.on{ background:var(--orange); border-color:var(--orange); }
+  .solo{ font-family:var(--mono); font-size:11px; letter-spacing:0.02em; color:var(--ink); margin-top:11px;
+    padding-top:9px; border-top:1px dashed var(--line); line-height:1.55; }
+  .solo b{ color:var(--orange); font-weight:700; }
+
+  /* ── readout ──────────────────────────────────────────── */
+  .readout{ margin-top:18px; background:var(--panel); border:1.5px solid var(--ink); border-radius:8px;
+    padding:17px 20px 6px; }
+  .readout .pre{ font-family:var(--mono); font-size:10px; letter-spacing:0.18em; color:var(--muted);
+    text-transform:uppercase; margin-bottom:8px; }
+  .headline{ font-family:var(--disp); font-weight:700; font-size:clamp(19px,3.3vw,27px); line-height:1.3;
+    letter-spacing:0.01em; color:var(--ink); text-wrap:balance; }
+  .headline b{ font-weight:700; color:var(--orange); }
+  .headline .teal{ font-weight:700; color:var(--teal); }
+
+  .tiles{ display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--line);
+    margin:16px -20px 0; border-top:1px dashed var(--line); }
+  .tile{ background:var(--panel); padding:13px 20px 15px; }
+  .tile .tk{ font-family:var(--mono); font-size:9px; letter-spacing:0.16em; color:var(--muted); text-transform:uppercase; }
+  .tile .tv{ font-family:var(--mono); font-weight:700; font-size:clamp(21px,3.6vw,27px); color:var(--teal);
+    margin-top:5px; line-height:1.1; }
+  .tile.hot .tv{ color:var(--orange); }
+  .tile .ts{ font-size:11.5px; color:var(--muted); margin-top:4px; line-height:1.4; }
+
+  .kicker{ margin:0 -20px; padding:13px 20px 15px; border-top:1px solid var(--line);
+    background:var(--panel2); font-size:14.5px; line-height:1.5; color:var(--ink); text-wrap:pretty;
+    border-radius:0 0 7px 7px; }
+  .kicker b{ font-weight:700; color:var(--orange); }
+  .kicker .teal{ font-weight:700; color:var(--teal); }
+
+  /* ── the chart ────────────────────────────────────────── */
+  .chartcard{ background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:12px 14px 12px; }
+  .charthead{ display:flex; justify-content:space-between; align-items:center; gap:10px 16px; flex-wrap:wrap; }
+  .legend{ display:flex; gap:14px; flex-wrap:wrap; font-family:var(--mono); font-size:10px; letter-spacing:0.1em;
+    text-transform:uppercase; color:var(--ink); }
+  .legend span{ display:inline-flex; align-items:center; gap:6px; }
+  .legend svg{ display:block; }
+  .charthead .chips{ margin-top:0; }
+  #chart{ display:block; width:100%; margin-top:8px; touch-action:pan-y; }
+  #chart text{ font-family:var(--mono); }
+  .chartread{ font-family:var(--mono); font-size:11px; letter-spacing:0.04em; color:var(--muted);
+    margin-top:6px; min-height:1.6em; line-height:1.6; }
+  .chartread b{ color:var(--ink); font-weight:700; }
+
+  /* ── milestone grid ───────────────────────────────────── */
+  .tablewrap{ position:relative; }
+  .tablecard{ overflow-x:auto; -webkit-overflow-scrolling:touch; overscroll-behavior-x:contain; }
+  .tablewrap::after{ content:''; position:absolute; top:0; right:0; bottom:0; width:38px;
+    background:linear-gradient(90deg,rgba(245,239,225,0),var(--cream) 78%);
+    pointer-events:none; opacity:0; transition:opacity .18s; }
+  .tablewrap.is-clipped::after{ opacity:1; }
+  .swipehint{ display:none; font-family:var(--mono); font-size:9.5px; letter-spacing:0.16em;
+    text-transform:uppercase; color:var(--brass); margin-top:7px; }
+  .tablewrap.is-clipped .swipehint{ display:block; }
+  table{ width:100%; border-collapse:collapse; min-width:560px; }
+  thead th{ background:var(--teal); color:var(--cream); font-family:var(--disp); font-weight:700;
+    font-size:12px; letter-spacing:0.08em; padding:11px 10px; text-align:center; text-transform:uppercase; }
+  thead th:first-child{ background:var(--ink); text-align:left; border-radius:7px 0 0 0; padding-left:14px; }
+  thead th:last-child{ background:var(--orange); border-radius:0 7px 0 0; }
+  thead .sub{ display:block; font-family:var(--mono); font-weight:400; font-size:8px; letter-spacing:0.14em;
+    opacity:0.82; margin-top:3px; }
+  tbody th{ font-family:var(--disp); font-weight:700; font-size:14px; color:var(--brass); text-align:left;
+    background:var(--cream); border-bottom:1px solid var(--line); letter-spacing:0.05em; padding:10px 10px 10px 14px; }
+  tbody th .ms{ display:block; font-family:var(--body); font-weight:400; font-size:11px; letter-spacing:0;
+    color:var(--muted); margin-top:2px; text-transform:none; }
+  tbody td{ font-family:var(--mono); font-size:15.5px; text-align:center; padding:10px 10px;
+    border-bottom:1px solid var(--line); background:var(--panel); }
+  tbody td .yr{ display:block; font-size:10px; letter-spacing:0.08em; color:var(--muted); margin-top:2px; }
+  tbody tr:nth-child(even) td{ background:var(--panel2); }
+  tbody td.gap{ color:var(--teal); }
+  tbody tr.hot th{ color:var(--orange); }
+  tbody tr.hot td{ background:var(--orange-w); color:var(--orange); font-weight:700;
+    border-top:2px solid var(--orange); border-bottom:2px solid var(--orange); }
+  .tablefoot{ font-family:var(--mono); font-size:10px; letter-spacing:0.06em; color:var(--muted);
+    margin-top:8px; text-align:right; }
+  .tablefoot b{ color:var(--brass); font-weight:700; }
+
+  /* ── actions ──────────────────────────────────────────── */
+  .actions{ display:flex; gap:10px; flex-wrap:wrap; margin-top:18px; align-items:center; }
+  button.act{ font-family:var(--mono); font-weight:700; font-size:11px; letter-spacing:0.12em;
+    text-transform:uppercase; color:var(--cream); background:var(--teal); border:1.5px solid var(--teal);
+    border-radius:999px; padding:10px 20px; cursor:pointer; transition:background .14s,color .14s; }
+  button.act:hover{ background:var(--teal-d); border-color:var(--teal-d); }
+  button.act.ghost{ background:transparent; color:var(--teal); }
+  button.act.ghost:hover{ background:var(--teal); color:var(--cream); }
+  button.act:focus-visible{ outline:2px solid var(--orange); outline-offset:3px; }
+  .actnote{ font-family:var(--mono); font-size:10px; letter-spacing:0.06em; color:var(--muted); }
+
+  .note{ font-family:"Nothing You Could Do",cursive; font-size:17.5px; line-height:1.4;
+    color:var(--orange); text-align:right; margin-top:16px; }
+
+  /* ── fine print ───────────────────────────────────────── */
+  .fineprint{ margin-top:20px; border:1.4px solid var(--ink); border-radius:6px; background:var(--cream);
+    padding:12px 16px; display:flex; align-items:flex-start; gap:16px; flex-wrap:wrap; }
+  .fineprint .k{ font-family:var(--disp); font-weight:700; font-size:11px; letter-spacing:0.14em;
+    color:var(--orange); text-transform:uppercase; flex:0 0 auto; padding-top:2px; }
+  .fineprint .v{ font-family:var(--mono); font-size:10.5px; letter-spacing:0.02em; color:var(--ink);
+    line-height:1.6; flex:1 1 420px; }
+  .fineprint .v span{ color:var(--muted); }
+
+  /* ── footer ───────────────────────────────────────────── */
+  footer{ margin-top:22px; margin-left:calc(50% - 50vw); margin-right:calc(50% - 50vw);
+    background:var(--teal); color:var(--cream); padding:20px clamp(16px,4vw,38px); }
+  .footin{ max-width:960px; margin:0 auto; display:flex; align-items:center; justify-content:space-between;
+    gap:20px; flex-wrap:wrap; }
+  .foot-big{ font-family:var(--disp); font-weight:700; font-size:15px; letter-spacing:0.05em; line-height:1.35; }
+  .foot-big span{ color:var(--mustard); }
+  .foot-cta{ text-align:right; display:flex; flex-direction:column; align-items:flex-end; gap:5px; }
+  a.go{ font-family:var(--mono); font-weight:700; font-size:12px; letter-spacing:0.07em; color:var(--mustard);
+    text-decoration:none; border-bottom:1.5px solid transparent; transition:border-color .15s; }
+  a.go:hover{ border-bottom-color:var(--mustard); }
+  a.go2{ font-family:var(--mono); font-weight:700; font-size:10.5px; letter-spacing:0.05em; color:var(--cream);
+    opacity:0.8; text-decoration:none; border-bottom:1px solid transparent; transition:opacity .15s,border-color .15s; }
+  a.go2:hover{ opacity:1; border-bottom-color:var(--cream); }
+  .foot-cta .sub{ font-size:11px; opacity:0.88; font-style:italic; max-width:32ch; margin-left:auto; }
+  footer a:focus-visible{ outline:2px solid var(--mustard); outline-offset:3px; border-radius:3px; }
+
+  @media (max-width:680px){
+    header{ gap:14px; align-items:center; }
+    header > div:first-child{ flex:1 1 210px; min-width:0; }
+    .tagline{ max-width:none; }
+    .dialwrap{ flex:1 0 100%; padding-top:0; text-align:center; }
+    .dialwrap svg{ width:104px; height:66px; margin:0 auto; }
+    .diallabel{ font-size:7.5px; letter-spacing:0.15em; }
+    h1{ letter-spacing:0.02em; }
+    .console,.bench,.phases{ grid-template-columns:1fr; }
+    .tiles{ grid-template-columns:1fr; }
+    .tile{ padding:12px 20px 13px; }
+    .foot-cta,.foot-cta .sub{ align-items:flex-start; text-align:left; margin-left:0; }
+    .note{ text-align:left; }
+
+    .howto{ font-size:12.5px; line-height:1.75; }
+    .fineprint .v{ font-size:12px; line-height:1.75; }
+    .fineprint{ gap:8px; }
+    .chartread{ font-size:11.5px; }
+
+    input[type=range]{ height:6px; }
+    input[type=range]::-webkit-slider-thumb{ width:26px; height:26px; margin-top:-10px; }
+    input[type=range]::-moz-range-thumb{ width:26px; height:26px; }
+
+    table{ min-width:0; }
+    thead th{ font-size:10px; letter-spacing:0.04em; padding:9px 4px; }
+    thead th:first-child{ padding-left:9px; }
+    thead .sub{ font-size:7.5px; letter-spacing:0.06em; }
+    tbody th{ font-size:12.5px; padding:9px 4px 9px 9px; letter-spacing:0.02em; }
+    tbody th .ms{ font-size:10.5px; }
+    tbody td{ font-size:12.5px; padding:9px 3px; }
+    tbody td .yr{ font-size:9px; letter-spacing:0.02em; }
+    .tablefoot{ text-align:left; line-height:1.6; }
+
+    .actions{ flex-direction:column; align-items:stretch; }
+    button.act{ width:100%; min-height:46px; }
+    .actnote{ text-align:center; }
+  }
+
+  /* ── print ────────────────────────────────────────────── */
+  @media print{
+    @page{ size:letter; margin:0.45in; }
+    body{ background:var(--cream); -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    .wrap{ padding:0; max-width:100%; }
+    .noprint, input[type=range], .chips, .actions, .howto, .swipehint, .chartread{ display:none !important; }
+    .tablewrap::after{ display:none; }
+    .sectag{ margin:14px 0 7px; }
+    .ctrl,.lane{ padding-bottom:10px; }
+    input[type=number]{ border-bottom:1px solid var(--line) !important; }
+    .readout,.chartcard,table,.phases{ break-inside:avoid; }
+    footer{ margin:16px 0 0; border-radius:6px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header>
+    <div>
+      <div class="eyebrow">@doesmatmakecents &nbsp;·&nbsp; Crossover Calculator &nbsp;·&nbsp; Live Instrument</div>
+      <h1>THE CROSSOVER<br>POINT</h1>
+      <div class="tagline">The year your investments can <b>pay for your life</b>. After that, work is optional. Find your year.</div>
+    </div>
+    <div class="dialwrap">
+      <svg width="130" height="82" viewBox="0 0 118 74" aria-hidden="true">
+        <path d="M 12 64 A 47 47 0 0 1 106 64" fill="none" stroke="#2E2620" stroke-width="2.4"/>
+        <g stroke="#B08A35" stroke-width="2">
+          <line x1="15.8" y1="60.4" x2="22.9" y2="53.3"/>
+          <line x1="31.4" y1="26.9" x2="36.4" y2="35.6"/>
+          <line x1="59" y1="17" x2="59" y2="27"/>
+          <line x1="86.6" y1="26.9" x2="81.6" y2="35.6"/>
+          <line x1="102.2" y1="60.4" x2="95.1" y2="53.3"/>
+        </g>
+        <line id="needle" x1="59" y1="64" x2="59" y2="24" stroke="#C95B2B" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="59" cy="64" r="5.5" fill="#C95B2B"/>
+        <circle cx="59" cy="64" r="2" fill="#F5EFE1"/>
+      </svg>
+      <div class="diallabel" id="dialLabel">The Dial · Set to Coast</div>
+    </div>
+  </header>
+
+  <div class="rule"></div>
+  <div class="howto">HOW TO READ &rarr; set your <b>age</b>, <b>pay</b> and <b>spending</b> &middot; try the <b>what-ifs</b> &middot; the dial shows how much of your spending your investments already cover</div>
+
+  <div class="notice">
+    <div class="k">The Idea</div>
+    <div class="v">It's the point where your investments can pay you more each month than you spend. Your number is <b id="ideaNum">$1,050,000</b>: one year of spending divided by your withdrawal rate. The idea comes from the book <i>Your Money or Your Life</i>.</div>
+  </div>
+
+  <div class="why">
+    <div class="k">Why It Matters</div>
+    <div class="v">Retirement feels far off and fuzzy. The crossover gives you an actual date: <b id="whyWhen">age 51</b>. Each dollar you don't spend helps twice. It grows your portfolio, and it lowers the number you need. Once you're there, <b>your job becomes a choice</b>.</div>
+  </div>
+
+  <div class="sectag">The Three Phases &middot; how the bills change hands</div>
+  <div class="phases">
+    <div class="phase">
+      <div class="disc">1</div>
+      <div class="pt">Your Job Pays for It All</div>
+      <div class="pd">Every bill comes out of your paycheque. Investment income is pocket change.</div>
+      <div class="pm">Paycheque does everything</div>
+    </div>
+    <div class="phase">
+      <div class="disc">2</div>
+      <div class="pt">Your Money Pitches In</div>
+      <div class="pd">You reach Coast, so you'd hit your number by 65 even if you stopped saving. Growth also starts outpacing what you add each year.</div>
+      <div class="pm">Coast FI &middot; growth &gt; contributions</div>
+    </div>
+    <div class="phase end">
+      <div class="disc">3</div>
+      <div class="pt">The Crossover</div>
+      <div class="pd">Your investments can cover your spending. The paycheque is optional now.</div>
+      <div class="pm">Investment income &ge; spending</div>
+    </div>
+  </div>
+
+  <div class="sectag">The Console &middot; your life, in today's dollars</div>
+  <div class="console">
+    <div class="ctrl">
+      <div class="lab"><span class="k">Current Age</span><span class="h">18 – 70</span></div>
+      <div class="valrow"><input id="ageN" type="number" min="18" max="70" step="1" value="27" aria-label="Current age"><span class="unit">years old</span></div>
+      <input id="ageR" type="range" min="18" max="70" step="1" value="27" aria-label="Current age slider">
+    </div>
+    <div class="ctrl">
+      <div class="lab"><span class="k">Invested Today</span><span class="h">$0 – $2,000,000</span></div>
+      <div class="valrow"><span class="cur">$</span><input id="pvN" type="number" min="0" max="2000000" step="1000" value="25000" aria-label="Current invested balance in dollars"></div>
+      <input id="pvR" type="range" min="0" max="2000000" step="1000" value="25000" aria-label="Current balance slider">
+    </div>
+    <div class="ctrl">
+      <div class="lab"><span class="k">Monthly Take-Home</span><span class="h">$0 – $20,000</span></div>
+      <div class="valrow"><span class="cur">$</span><input id="incN" type="number" min="0" max="20000" step="50" value="5000" aria-label="Monthly take-home pay in dollars"><span class="unit">/ mo</span></div>
+      <input id="incR" type="range" min="0" max="20000" step="50" value="5000" aria-label="Monthly take-home pay slider">
+      <div class="hint" id="saveHint">You invest the gap.</div>
+    </div>
+    <div class="ctrl">
+      <div class="lab"><span class="k">Monthly Spending</span><span class="h">$500 – $20,000</span></div>
+      <div class="valrow"><span class="cur">$</span><input id="expN" type="number" min="500" max="20000" step="50" value="3500" aria-label="Monthly spending in dollars"><span class="unit">/ mo</span></div>
+      <input id="expR" type="range" min="500" max="20000" step="50" value="3500" aria-label="Monthly spending slider">
+      <div class="hint">Everything: rent, food, fun. This sets your target.</div>
+    </div>
+    <div class="ctrl">
+      <div class="lab"><span class="k">Real Return</span><span class="h">2% – 10% / yr</span></div>
+      <div class="valrow"><input id="retN" type="number" min="2" max="10" step="0.1" value="6.5" aria-label="Real annual return, percent"><span class="unit">% / yr after inflation</span></div>
+      <input id="retR" type="range" min="2" max="10" step="0.1" value="6.5" aria-label="Real return slider">
+      <div class="hint">6.5% is the S&amp;P 500's long-run average after inflation. If you see 9–10% quoted, take off about 3% for inflation.</div>
+    </div>
+    <div class="ctrl">
+      <div class="lab"><span class="k">Withdrawal Rate</span><span class="h">3% – 5% / yr</span></div>
+      <div class="valrow"><input id="wrN" type="number" min="3" max="5" step="0.1" value="4" aria-label="Safe withdrawal rate, percent"><span class="unit">% of portfolio / yr</span></div>
+      <input id="wrR" type="range" min="3" max="5" step="0.1" value="4" aria-label="Withdrawal rate slider">
+      <div class="hint">How much you can safely draw each year. 4% is the classic rule, and 3–3.5% is safer if you retire very early.</div>
+    </div>
+  </div>
+
+  <div class="sectag">The What-Ifs &middot; small changes, earlier date</div>
+  <div class="bench">
+    <div class="lane">
+      <div class="tag">Spend Less, Earn More</div>
+      <div class="sub">Permanent changes. Any extra pay gets invested.</div>
+      <div class="minirow"><span class="ml">Spend less</span><span class="cur">$</span><input id="cutN" type="number" min="0" max="5000" step="50" value="300" aria-label="Spend less per month in dollars"><span class="unit">/ mo</span></div>
+      <div class="minirow"><span class="ml">Earn more</span><span class="cur">$</span><input id="raiseN" type="number" min="0" max="10000" step="50" value="0" aria-label="Earn more per month in dollars"><span class="unit">/ mo</span></div>
+      <div class="solo" id="leverSolo">&nbsp;</div>
+    </div>
+    <div class="lane">
+      <div class="tag">The Sprint</div>
+      <div class="sub">Invest extra for a few years, then go back to normal.</div>
+      <div class="minirow"><span class="ml">Extra</span><span class="cur">$</span><input id="spN" type="number" min="0" max="10000" step="50" value="500" aria-label="Extra monthly investment during sprint in dollars"><span class="unit">/ mo</span></div>
+      <div class="chips" id="yrChips" role="group" aria-label="Sprint length"></div>
+      <div class="solo" id="sprintSolo">&nbsp;</div>
+    </div>
+  </div>
+
+  <div class="readout">
+    <div class="pre">When Your Money Pays for Your Life</div>
+    <div class="headline" id="headline"></div>
+    <div class="tiles">
+      <div class="tile hot">
+        <div class="tk">Your crossover age</div>
+        <div class="tv" id="tAge">—</div>
+        <div class="ts" id="tAgeSub">&nbsp;</div>
+      </div>
+      <div class="tile">
+        <div class="tk">Your crossover number</div>
+        <div class="tv" id="tNum">—</div>
+        <div class="ts" id="tNumSub">&nbsp;</div>
+      </div>
+      <div class="tile">
+        <div class="tk">What the what-ifs buy you</div>
+        <div class="tv" id="tWhat">—</div>
+        <div class="ts" id="tWhatSub">&nbsp;</div>
+      </div>
+    </div>
+    <div class="kicker" id="kicker"></div>
+  </div>
+
+  <div class="sectag">The Chart &middot; your spending vs. what your money can pay you</div>
+  <div class="chartcard">
+    <div class="charthead">
+      <div class="legend" aria-hidden="true">
+        <span><svg width="22" height="8"><line x1="1" y1="4" x2="21" y2="4" stroke="#2E2620" stroke-width="2" stroke-dasharray="4 3"/></svg>Monthly spending</span>
+        <span><svg width="22" height="8"><line x1="1" y1="4" x2="21" y2="4" id="legSwatch" stroke="#23625D" stroke-width="2.5"/></svg>Monthly investment income</span>
+      </div>
+      <div class="chips" id="scenChips" role="group" aria-label="Scenario">
+        <button type="button" class="chip on" data-s="base" aria-pressed="true">CURRENT PLAN</button>
+        <button type="button" class="chip" data-s="alt" aria-pressed="false">WITH WHAT-IFS</button>
+      </div>
+    </div>
+    <svg id="chart" role="img" aria-label="Line chart of monthly spending against monthly investment income by age"></svg>
+    <div class="chartread" id="chartRead" aria-live="polite"></div>
+  </div>
+
+  <div class="sectag">The Milestones &middot; the road to the crossover</div>
+  <div class="tablewrap">
+  <div class="tablecard" id="tablecard">
+    <table>
+      <thead>
+        <tr>
+          <th>Milestone</th>
+          <th>Current Plan<span class="sub" id="thAsub">$1,500 / mo in</span></th>
+          <th>With What-Ifs<span class="sub" id="thBsub">&nbsp;</span></th>
+          <th>Head Start<span class="sub">years sooner</span></th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+  <div class="swipehint">Swipe the grid &rarr;</div>
+  </div>
+  <div class="tablefoot">Ages at the end of the milestone year &middot; balances in <b>today's</b> dollars</div>
+
+  <div class="actions noprint">
+    <button class="act" id="btnCopy" type="button">Copy the result</button>
+    <button class="act ghost" id="btnPrint" type="button">Print / save as PDF</button>
+    <span class="actnote" id="copyNote"></span>
+  </div>
+
+  <div class="note">Nobody's saying quit the day you cross.<br>It's just nice to know you could. &mdash; Mat</div>
+
+  <div class="fineprint">
+    <div class="k">The Fine Print</div>
+    <div class="v">
+      FOR REFERENCE AND EDUCATION ONLY. A MAP OF THE MATH, NOT FINANCIAL ADVICE.
+      <span>Crossover = first year portfolio &times; withdrawal rate &ge; a year of spending. Everything is in today's dollars: the return is after inflation, and your pay and spending keep pace with it. Coast = enough invested to reach your crossover number by 65 with no more contributions. Monthly compounding, contributions at month end. No taxes, fees or raises beyond the what-ifs. The 4% rule was built for ~30-year retirements; retiring early, many use 3–3.5%. Hitting the crossover isn't a reason to quit on the spot. Markets dip and costs change, so most people keep a buffer. Arithmetic, not a forecast.</span>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <div class="footin">
+    <div class="foot-big">WORK UNTIL IT'S<br><span>OPTIONAL.</span></div>
+    <div class="foot-cta">
+      <a class="go" href="https://mathewchiang.gumroad.com/l/costFIfree?layout=profile" target="_blank" rel="noopener">→ THE FREE COAST FIRE CALCULATOR ↗</a>
+      <div class="sub">Coast comes first, and the crossover is where it leads. — Mat</div>
+      <a class="go2" href="https://mathewchiang.gumroad.com/l/coastFIdashboard" target="_blank" rel="noopener">Ready for the full build? → The Coast FIRE Dashboard ↗</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+
+  var COAST_AGE = 65;
+  var SPRINT_YEARS = [0,1,2,3,5];
+
+  var $ = function(id){ return document.getElementById(id); };
+  var ageN=$("ageN"), ageR=$("ageR"), pvN=$("pvN"), pvR=$("pvR"), incN=$("incN"), incR=$("incR"),
+      expN=$("expN"), expR=$("expR"), retN=$("retN"), retR=$("retR"), wrN=$("wrN"), wrR=$("wrR"),
+      cutN=$("cutN"), raiseN=$("raiseN"), spN=$("spN");
+
+  var sprintYrs = 3, scen = "base";
+  var last = {};
+
+  /* ── formatting ── */
+  function money(n){
+    if(!isFinite(n)) return "—";
+    return "$" + Math.round(n).toLocaleString("en-CA");
+  }
+  function moneyShort(n){
+    if(!isFinite(n)) return "—";
+    var a = Math.abs(n);
+    if(a >= 1e6) return "$" + (n/1e6).toFixed(a>=1e7?1:2).replace(/\.?0+$/,"") + "M";
+    if(a >= 1e4) return "$" + Math.round(n/1e3) + "k";
+    return money(n);
+  }
+  function yrs(n){ return n + (n===1 ? " year" : " years"); }
+
+  /* ── the engine ──────────────────────────────────────────
+     Real dollars throughout. Monthly loop: the balance earns the
+     real return, then the month's savings (pay − spending, plus any
+     sprint) land. Entry 0 is today, so "already there" is testable. */
+  function run(o){
+    var r = Math.pow(1 + o.ret, 1/12) - 1;
+    var target = o.exp * 12 / o.wr;
+    var bal = o.pv, cumC = o.pv, cumG = 0;
+    var base = Math.max(0, o.inc - o.exp);
+    /* today's entry carries a year of expected growth vs. a year of savings, so milestones can read "already there" */
+    var out = [{ y:0, g:bal * o.ret, c:(base + (o.spYrs > 0 ? o.spExtra : 0)) * 12, bal:bal, cumC:cumC, cumG:0 }];
+    for(var y=1; y<=o.cap; y++){
+      var p = base + (y <= o.spYrs ? o.spExtra : 0), g = 0, c = 0;
+      for(var m=0; m<12; m++){ var i = bal * r; g += i; c += p; bal += i + p; }
+      cumC += c; cumG += g;
+      out.push({ y:y, g:g, c:c, bal:bal, cumC:cumC, cumG:cumG });
+    }
+    out.forEach(function(e){
+      e.inv = e.bal * o.wr / 12;
+      var left = COAST_AGE - (o.age + e.y);
+      e.coast = left > 0 ? e.bal * Math.pow(1 + o.ret, left) >= target : e.bal >= target;
+    });
+    return { s:out, target:target, exp:o.exp };
+  }
+  function firstYear(series, test){
+    for(var i=0;i<series.length;i++) if(test(series[i])) return series[i];
+    return null;
+  }
+  function milestones(R){
+    return [
+      { k:"Growth Passes You", d:"Growth beats a year of contributions", t:function(e){ return e.g > 0 && e.g >= e.c; } },
+      { k:"Coast FI",          d:"On track for your number by " + COAST_AGE + " with no more saving", t:function(e){ return e.coast; } },
+      { k:"Halfway",           d:"Investments cover half your spending", t:function(e){ return e.inv >= R.exp / 2; } },
+      { k:"The Crossover",     d:"Investments cover all your spending", t:function(e){ return e.inv >= R.exp; }, hot:true }
+    ];
+  }
+  function crossOf(R){ return firstYear(R.s, function(e){ return e.inv >= R.exp; }); }
+
+  /* ── input plumbing ── */
+  function clampNum(el){
+    var v = parseFloat(el.value);
+    if(isNaN(v)) return null;
+    return Math.min(parseFloat(el.max), Math.max(parseFloat(el.min), v));
+  }
+  function num(el){
+    var v = clampNum(el);
+    return v === null ? parseFloat(el.min) : v;
+  }
+  function fill(r){
+    var mn = parseFloat(r.min), mx = parseFloat(r.max), v = parseFloat(r.value);
+    r.style.setProperty("--fill", ((v-mn)/(mx-mn)*100) + "%");
+  }
+  function pair(numEl, rngEl){
+    numEl.addEventListener("input", function(){
+      var v = parseFloat(numEl.value);
+      if(!isNaN(v)){ rngEl.value = v; fill(rngEl); }
+      render();
+    });
+    numEl.addEventListener("blur", function(){
+      var v = clampNum(numEl);
+      if(v===null) v = parseFloat(rngEl.value);
+      numEl.value = v; rngEl.value = v; fill(rngEl); render();
+    });
+    rngEl.addEventListener("input", function(){
+      numEl.value = rngEl.value; fill(rngEl); render();
+    });
+    fill(rngEl);
+  }
+  pair(ageN,ageR); pair(pvN,pvR); pair(incN,incR); pair(expN,expR); pair(retN,retR); pair(wrN,wrR);
+  [cutN, raiseN, spN].forEach(function(el){
+    el.addEventListener("input", render);
+    el.addEventListener("blur", function(){ var v=clampNum(el); el.value = v===null?0:v; render(); });
+  });
+
+  function setOn(host, attr, val){
+    var cs = host.children;
+    for(var i=0;i<cs.length;i++){
+      var on = cs[i].dataset[attr] === String(val);
+      cs[i].classList.toggle("on", on);
+      cs[i].setAttribute("aria-pressed", on ? "true" : "false");
+    }
+  }
+
+  SPRINT_YEARS.forEach(function(n){
+    var b = document.createElement("button");
+    b.type = "button"; b.className = "chip"; b.dataset.y = n;
+    b.textContent = n === 0 ? "OFF" : n + (n===1 ? " YR" : " YRS");
+    b.addEventListener("click", function(){ sprintYrs = n; render(); });
+    $("yrChips").appendChild(b);
+  });
+
+  $("scenChips").addEventListener("click", function(e){
+    var b = e.target.closest("button"); if(!b || b.disabled) return;
+    scen = b.dataset.s; render();
+  });
+
+  function soonerText(age, base, alt){
+    if(!alt) return "still no crossover before 100";
+    if(!base) return "crosses at age " + (age + alt.y) + " instead of never";
+    var d = base.y - alt.y;
+    return d > 0 ? "<b>−" + yrs(d) + "</b> (crossover at " + (age + alt.y) + ")"
+         : d < 0 ? "<b>+" + yrs(-d) + "</b> later" : "<b>0 years</b>, same year";
+  }
+
+  /* ── render ── */
+  function render(){
+    var age = Math.round(num(ageN)), pv = num(pvN), inc = num(incN), exp = num(expN);
+    var ret = num(retN) / 100, wr = num(wrN) / 100;
+    var cut = Math.max(0, Math.min(num(cutN), exp - 500)), raise = num(raiseN), spExtra = num(spN);
+    var cap = Math.max(1, 100 - age);
+    var sprintOn = sprintYrs > 0 && spExtra > 0;
+    var levers = cut > 0 || raise > 0;
+    var anyAlt = levers || sprintOn;
+
+    setOn($("yrChips"), "y", sprintYrs);
+
+    var baseO = { age:age, pv:pv, inc:inc, exp:exp, ret:ret, wr:wr, spExtra:0, spYrs:0, cap:cap };
+    function withO(ch){ var o = {}, k; for(k in baseO) o[k] = baseO[k]; for(k in ch) o[k] = ch[k]; return o; }
+    /* spending less leaves pay alone — the cut moves from spending into savings */
+    var B = run(baseO);
+    var A = run(withO({ exp:exp - cut, inc:inc + raise, spExtra:sprintOn ? spExtra : 0, spYrs:sprintOn ? sprintYrs : 0 }));
+    var Lv = run(withO({ exp:exp - cut, inc:inc + raise }));
+    var Sp = run(withO({ spExtra:spExtra, spYrs:sprintYrs }));
+    var xB = crossOf(B), xA = anyAlt ? crossOf(A) : xB;
+
+    var save = inc - exp, rate = inc > 0 ? save / inc : 0;
+    var sh = $("saveHint");
+    if(save > 0){ sh.className = "hint"; sh.innerHTML = "You invest the gap: <b>" + money(save) + "/mo</b>, a " + Math.round(rate*100) + "% savings rate."; }
+    else { sh.className = "hint warn"; sh.innerHTML = "<b>Spending ≥ pay.</b> There's nothing left to invest, so only your current balance grows."; }
+
+    $("ideaNum").textContent = money(B.target);
+    $("whyWhen").textContent = !xB ? "a real year you can plan for" : xB.y === 0 ? "a line you've already crossed" : "age " + (age + xB.y) + ", " + yrs(xB.y) + " from now";
+
+    /* dial: share of spending covered today, pinned vertical at 100% */
+    var cov = B.s[0].inv / exp, rc = Math.min(1, cov);
+    $("needle").style.transform = "rotate(" + (-90 + 90*rc) + "deg)";
+    $("dialLabel").textContent = cov >= 1 ? "The Dial · Crossed over" : "The Dial · " + Math.round(cov*100) + "% of spending covered";
+
+    $("leverSolo").innerHTML = levers ? "On its own: " + soonerText(age, xB, crossOf(Lv)) : "Add a cut or a raise to see what it does.";
+    $("sprintSolo").innerHTML = sprintOn ? "On its own: " + soonerText(age, xB, crossOf(Sp)) : "Pick an amount and a length to see what it does.";
+
+    /* headline */
+    var hl;
+    if(!xB){
+      hl = 'No crossover <b>before age 100</b> at these settings. Widen the gap between pay and spending.';
+      if(anyAlt && xA) hl += ' The what-ifs get you there at <span class="teal">age ' + (age + xA.y) + '</span>.';
+    } else if(xB.y === 0){
+      hl = 'You’re <b>already there.</b> Your investments can pay <span class="teal">' + money(xB.inv) +
+           '/mo</span>, and you spend <span class="teal">' + money(exp) + '/mo</span>.';
+    } else {
+      hl = 'Your investments cover your spending at <b>age ' + (age + xB.y) + '</b>, <span class="teal">' + yrs(xB.y) + '</span> from now.';
+      if(anyAlt && xA && xA.y < xB.y) hl += ' With the what-ifs, it’s <span class="teal">age ' + (age + xA.y) + '</span>.';
+    }
+    $("headline").innerHTML = hl;
+
+    /* tiles */
+    $("tAge").textContent = xB ? String(age + xB.y) : "—";
+    $("tAgeSub").textContent = xB ? (xB.y === 0 ? "you're there today" : yrs(xB.y) + " from now, current plan") : "not before age 100";
+    $("tNum").textContent = moneyShort(B.target);
+    $("tNumSub").textContent = money(exp) + "/mo × 12 ÷ " + (wr*100).toFixed(1).replace(/\.0$/,"") + "%";
+    var tW = $("tWhat"), tWs = $("tWhatSub");
+    if(!anyAlt){ tW.textContent = "—"; tWs.textContent = "set a what-if to compare"; }
+    else if(xB && xA){
+      var d = xB.y - xA.y;
+      tW.textContent = d > 0 ? "−" + yrs(d) : d < 0 ? "+" + yrs(-d) : "0 yrs";
+      tWs.textContent = d > 0 ? "sooner: age " + (age + xA.y) + " instead of " + (age + xB.y) + "." : d < 0 ? "later." : "same year. Try going bigger.";
+      if(cut > 0) tWs.textContent += " Your number drops to " + moneyShort(A.target) + ".";
+    } else if(xA){ tW.textContent = "age " + (age + xA.y); tWs.textContent = "instead of never"; }
+    else { tW.textContent = "—"; tWs.textContent = "still not before 100"; }
+
+    /* kicker */
+    var kick = $("kicker");
+    if(xB && xB.y > 0){
+      kick.innerHTML = 'At ' + (age + xB.y) + ', a ' + moneyShort(xB.bal) + ' portfolio can pay you <b>' + money(xB.inv) +
+        '/mo</b>, which is more than the <span class="teal">' + money(exp) + '/mo</span> you spend. You can keep working if you want to. <b>You just won’t need to.</b>';
+      kick.style.display = "";
+    } else if(xB){
+      kick.innerHTML = 'Your portfolio already covers how you live. Keep a buffer, since markets do dip, and <b>spend your time on what you care about</b>.';
+      kick.style.display = "";
+    } else {
+      kick.style.display = "none";
+    }
+
+    /* scenario chips */
+    $("scenChips").children[1].disabled = !anyAlt;
+    if(!anyAlt) scen = "base";
+    setOn($("scenChips"), "s", scen);
+    $("legSwatch").setAttribute("stroke", scen === "alt" ? "#C95B2B" : "#23625D");
+
+    /* milestone grid */
+    $("thAsub").textContent = money(Math.max(0, save)) + " / mo in";
+    var bits = [];
+    if(cut > 0) bits.push("−" + money(cut) + " spend");
+    if(raise > 0) bits.push("+" + money(raise) + " pay");
+    if(sprintOn) bits.push("+" + money(spExtra) + " × " + sprintYrs + "y");
+    $("thBsub").textContent = bits.length ? bits.join(" · ") : "none set";
+    var mB = milestones(B), mA = milestones(A), html = "";
+    function cell(o){
+      if(!o) return 'after 100';
+      if(o.y === 0) return 'Done<span class="yr">ALREADY THERE</span>';
+      return 'Age ' + (age + o.y) + '<span class="yr">YEAR ' + o.y + ' · ' + moneyShort(o.bal) + '</span>';
+    }
+    var rows = mB.map(function(m, i){ return { m:m, b:firstYear(B.s, m.t), a:anyAlt ? firstYear(A.s, mA[i].t) : null }; });
+    rows.sort(function(p, q){ return ((p.m.hot ? 1 : 0) - (q.m.hot ? 1 : 0)) || ((p.b ? p.b.y : 999) - (q.b ? q.b.y : 999)); });
+    rows.forEach(function(r){
+      var m = r.m, b = r.b, a = r.a;
+      var gap = (b && a) ? b.y - a.y : null;
+      html += '<tr' + (m.hot ? ' class="hot"' : '') + '><th>' + m.k + '<span class="ms">' + m.d + '</span></th>' +
+              '<td>' + cell(b) + '</td>' +
+              '<td>' + (anyAlt ? cell(a) : '—') + '</td>' +
+              '<td class="gap">' + (gap === null ? '—' : gap > 0 ? '−' + gap : gap === 0 ? '0' : '+' + (-gap)) + '</td></tr>';
+    });
+    $("tbody").innerHTML = html;
+    checkClip();
+
+    last = { age:age, pv:pv, inc:inc, exp:exp, ret:ret, wr:wr, anyAlt:anyAlt, B:B, A:A, xB:xB, xA:xA, mB:mB };
+    drawChart();
+  }
+
+  /* ── the chart ───────────────────────────────────────── */
+  var chart = $("chart"), hoverYear = null, geo = null;
+  var NS = "http://www.w3.org/2000/svg";
+
+  function el(tag, attrs, text){
+    var e = document.createElementNS(NS, tag);
+    for(var k in attrs) e.setAttribute(k, attrs[k]);
+    if(text !== undefined) e.textContent = text;
+    return e;
+  }
+  function niceStep(raw){
+    var p = Math.pow(10, Math.floor(Math.log10(raw))), n = raw / p;
+    return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 2.5 ? 2.5 : n <= 5 ? 5 : 10) * p;
+  }
+
+  function drawChart(){
+    var L = last;
+    var R = scen === "alt" ? L.A : L.B;
+    var cross = scen === "alt" ? L.xA : L.xB;
+    var col = scen === "alt" ? "#C95B2B" : "#23625D";
+
+    var W = chart.clientWidth || 600, narrow = W < 520;
+    var H = narrow ? 230 : 290;
+    var m = { t:16, r:narrow ? 14 : 22, b:28, l:narrow ? 60 : 66 };
+    chart.setAttribute("viewBox", "0 0 " + W + " " + H);
+    chart.setAttribute("height", H);
+    while(chart.firstChild) chart.removeChild(chart.firstChild);
+
+    var endY = cross ? Math.max(10, Math.ceil(cross.y * 1.3) + 2) : 40;
+    var N = Math.min(R.s.length - 1, endY);
+    var data = R.s.slice(0, N + 1);
+    var yMax = R.exp * 1.5;
+    data.forEach(function(e){ yMax = Math.max(yMax, Math.min(e.inv, R.exp * 2)); });
+    var step = niceStep(yMax / 4);
+    yMax = Math.ceil(yMax / step) * step;
+
+    var x = function(y){ return m.l + (N === 0 ? 0 : y / N) * (W - m.l - m.r); };
+    var yv = function(v){ return H - m.b - (Math.min(v, yMax) / yMax) * (H - m.t - m.b); };
+    geo = { x:x, N:N, m:m, W:W, H:H, data:data, yv:yv, col:col, cross:cross, exp:R.exp };
+
+    if(cross && cross.y <= N){
+      chart.appendChild(el("rect", { x:x(cross.y), y:m.t, width:Math.max(0, x(N) - x(cross.y)), height:H - m.t - m.b,
+        fill:"#23625D", "fill-opacity":"0.06" }));
+      if(x(N) - x(cross.y) > 120)
+        chart.appendChild(el("text", { x:x(N) - 6, y:H - m.b - 8, "text-anchor":"end", "font-size":"9.5", "letter-spacing":"1.4", fill:"#7A6E5F" }, "WORK IS OPTIONAL"));
+    }
+
+    for(var v = 0; v <= yMax + 1e-6; v += step){
+      chart.appendChild(el("line", { x1:m.l, x2:W - m.r, y1:yv(v), y2:yv(v), stroke:v === 0 ? "#2E2620" : "#E0D5BE", "stroke-width":v === 0 ? 1.2 : 1 }));
+      chart.appendChild(el("text", { x:m.l - 8, y:yv(v) + 3.5, "text-anchor":"end", "font-size":"10", fill:"#7A6E5F" }, (v >= 1000 ? "$" + +(v/1000).toFixed(1) + "k" : "$" + v) + "/mo"));
+    }
+    var every = N > 40 ? 10 : 5;
+    for(var yy = 0; yy <= N; yy++){
+      var a = L.age + yy;
+      if(a % every === 0 && x(yy) <= W - m.r - 22)
+        chart.appendChild(el("text", { x:x(yy), y:H - m.b + 17, "text-anchor":"middle", "font-size":"10", fill:"#7A6E5F" }, "AGE " + a));
+    }
+
+    chart.appendChild(el("line", { x1:x(0), x2:x(N), y1:yv(R.exp), y2:yv(R.exp), stroke:"#2E2620", "stroke-width":2, "stroke-dasharray":"5 4" }));
+
+    var d = data.map(function(e, i){ return (i ? "L" : "M") + x(e.y).toFixed(1) + " " + yv(e.inv).toFixed(1); }).join(" ");
+    chart.appendChild(el("path", { d:d, fill:"none", stroke:col, "stroke-width":2.5, "stroke-linejoin":"round", "stroke-linecap":"round" }));
+
+    /* coast gets a quieter hollow marker on the income line */
+    var coast = firstYear(data, function(e){ return e.coast; });
+    if(coast && coast.y > 0 && (!cross || coast.y < cross.y)){
+      var ccx = x(coast.y), ccy = yv(coast.inv);
+      chart.appendChild(el("circle", { cx:ccx, cy:ccy, r:5, fill:"#FBF7EC", stroke:col, "stroke-width":2 }));
+      chart.appendChild(el("text", { x:ccx, y:ccy - 10, "text-anchor":"middle", "font-size":"9.5", "letter-spacing":"0.8", fill:"#7A6E5F" }, "COAST · " + (L.age + coast.y)));
+    }
+
+    if(cross && cross.y <= N){
+      var cx = x(cross.y), cy = yv(cross.inv);
+      chart.appendChild(el("line", { x1:cx, x2:cx, y1:cy, y2:H - m.b, stroke:"#C95B2B", "stroke-width":1.2, "stroke-dasharray":"2 3" }));
+      chart.appendChild(el("circle", { cx:cx, cy:cy, r:6, fill:"#C95B2B", stroke:"#FBF7EC", "stroke-width":2.5 }));
+      var lab = "CROSSOVER · AGE " + (L.age + cross.y);
+      var leftSide = cx + 10 + lab.length * 6.8 > W - m.r;
+      chart.appendChild(el("text", { x:leftSide ? cx - 10 : cx + 10, y:cy - 10, "text-anchor":leftSide ? "end" : "start",
+        "font-size":"10.5", "font-weight":"700", "letter-spacing":"0.8", fill:"#2E2620" }, lab));
+    }
+
+    chart.appendChild(el("g", { id:"hov", "pointer-events":"none" }));
+    drawHover();
+  }
+
+  function drawHover(){
+    var G = geo, hov = $("hov"); if(!G || !hov) return;
+    while(hov.firstChild) hov.removeChild(hov.firstChild);
+    var yr = hoverYear !== null && hoverYear <= G.N ? hoverYear : (G.cross && G.cross.y <= G.N ? G.cross.y : null);
+    var read = $("chartRead");
+    if(yr === null){ read.innerHTML = "Tap or hover to read any year."; return; }
+    var e = G.data[yr];
+    if(hoverYear !== null){
+      var cx = G.x(yr);
+      hov.appendChild(el("line", { x1:cx, x2:cx, y1:G.m.t, y2:G.H - G.m.b, stroke:"#7A6E5F", "stroke-width":1 }));
+      hov.appendChild(el("circle", { cx:cx, cy:G.yv(G.exp), r:4.5, fill:"#2E2620", stroke:"#FBF7EC", "stroke-width":2 }));
+      hov.appendChild(el("circle", { cx:cx, cy:G.yv(e.inv), r:4.5, fill:G.col, stroke:"#FBF7EC", "stroke-width":2 }));
+    }
+    var pct = Math.round(e.inv / G.exp * 100);
+    read.innerHTML = "<b>AGE " + (last.age + yr) + (yr ? " · YEAR " + yr : " · TODAY") + "</b> &middot; portfolio " + money(e.bal) +
+      " &middot; can pay you <b>" + money(e.inv) + "/mo</b> &middot; covers <b>" + pct + "%</b> of your spending";
+  }
+
+  function pick(ev){
+    var G = geo; if(!G) return;
+    var rect = chart.getBoundingClientRect();
+    var px = (ev.clientX - rect.left) * (G.W / rect.width);
+    var t = (px - G.m.l) / (G.W - G.m.l - G.m.r);
+    hoverYear = Math.max(0, Math.min(G.N, Math.round(t * G.N)));
+    drawHover();
+  }
+  chart.addEventListener("pointermove", pick);
+  chart.addEventListener("pointerdown", pick);
+  chart.addEventListener("pointerleave", function(){ hoverYear = null; drawHover(); });
+
+  /* ── the grid can outgrow narrow screens; only advertise the scroll when it has ── */
+  var tablecard = $("tablecard"), tablewrap = tablecard.parentNode;
+  function checkClip(){
+    var over = tablecard.scrollWidth - tablecard.clientWidth;
+    tablewrap.classList.toggle("is-clipped", over > 2 && tablecard.scrollLeft < over - 1);
+  }
+  tablecard.addEventListener("scroll", checkClip, { passive:true });
+  var rt;
+  window.addEventListener("resize", function(){ checkClip(); clearTimeout(rt); rt = setTimeout(drawChart, 80); });
+
+  /* ── actions ── */
+  $("btnPrint").addEventListener("click", function(){ window.print(); });
+
+  $("btnCopy").addEventListener("click", function(){
+    var L = last;
+    function line(o){ return !o ? "not before 100" : o.y === 0 ? "already there" : "age " + (L.age + o.y) + " (" + money(o.bal) + ")"; }
+    var txt =
+      "THE CROSSOVER POINT\n" +
+      "----------------------------------------\n" +
+      "Age today:        " + L.age + "\n" +
+      "Invested today:   " + money(L.pv) + "\n" +
+      "Take-home:        " + money(L.inc) + "/mo\n" +
+      "Spending:         " + money(L.exp) + "/mo\n" +
+      "Real return:      " + (L.ret*100).toFixed(1) + "%\n" +
+      "Withdrawal rate:  " + (L.wr*100).toFixed(1) + "%\n" +
+      "Crossover number: " + money(L.B.target) + "\n" +
+      "----------------------------------------\n" +
+      L.mB.map(function(m){ return m.k + ": " + line(firstYear(L.B.s, m.t)); }).join("\n") + "\n" +
+      (L.anyAlt ? "With what-ifs, crossover at: " + line(L.xA) + "\n" : "") +
+      "\nToday's dollars. Not advice. Just what I did. — Mat";
+
+    var note = $("copyNote");
+    function ok(){ note.textContent = "COPIED."; setTimeout(function(){ note.textContent = ""; }, 2200); }
+    function bad(){ note.textContent = "COULDN'T COPY. SELECT AND COPY MANUALLY."; setTimeout(function(){ note.textContent = ""; }, 3200); }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(txt).then(ok, bad);
+    } else {
+      var ta = document.createElement("textarea");
+      ta.value = txt; ta.style.position = "fixed"; ta.style.opacity = "0";
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand("copy"); ok(); } catch(e){ bad(); }
+      document.body.removeChild(ta);
+    }
+  });
+
+  render();
+})();
+</script>
+
+</body>
+</html>
